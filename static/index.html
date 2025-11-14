@@ -3,86 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Tutor - Your Personal Study Assistant</title>
+    <title>AI Tutor - Professional Learning Assistant</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-content">
-                <div class="logo">
-                    <i class="fas fa-graduation-cap"></i>
-                    <h1>AI Tutor</h1>
-                </div>
-                <p class="tagline">Your Personal Study Assistant</p>
-            </div>
-        </header>
-
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Subject Selection -->
-            <div class="subject-section" id="subjectSection">
-                <div class="card">
-                    <h2><i class="fas fa-book"></i> Select Subject</h2>
-                    <div class="subject-grid" id="subjectGrid">
-                        <div class="loading">Loading subjects...</div>
+            <!-- Header -->
+            <header class="header">
+                <div class="header-content">
+                    <div class="logo">
+                        <i class="fas fa-brain"></i>
+                        <h1>AI Tutor</h1>
                     </div>
-                    <div class="custom-subject">
-                        <input type="text" id="customSubject" placeholder="Or enter custom subject name">
-                        <button onclick="selectCustomSubject()">
-                            <i class="fas fa-check"></i> Use This
-                        </button>
-                    </div>
+                    <p class="tagline">Your intelligent learning assistant powered by RAG & LLM</p>
                 </div>
-            </div>
+            </header>
 
-            <!-- Chat Section -->
-            <div class="chat-section" id="chatSection" style="display: none;">
-                <div class="chat-header">
-                    <div class="subject-badge" id="currentSubjectBadge">
-                        <i class="fas fa-book"></i> <span id="currentSubject">Subject</span>
-                    </div>
-                    <button class="change-subject-btn" onclick="changeSubject()">
-                        <i class="fas fa-exchange-alt"></i> Change Subject
-                    </button>
-                </div>
+            <!-- Subject Selection / Chat Area -->
+            <div class="content-area">
+                <!-- Subject Selection View -->
+                <div id="subjectView" class="view-section active-view">
+                    <div class="subjects-container">
+                        <div class="card">
+                            <h2><i class="fas fa-book"></i> Select a Subject</h2>
+                            <p class="subtitle">Choose a subject to begin your learning session</p>
 
-                <div class="chat-container">
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="welcome-message">
-                            <i class="fas fa-robot"></i>
-                            <p>Hello! I'm your AI Tutor. Ask me anything about <strong id="welcomeSubject">this subject</strong>!</p>
+                            <div id="subjectGrid" class="subject-grid">
+                                <!-- Subjects loaded dynamically -->
+                            </div>
+
+                            <div class="custom-subject-section">
+                                <h3><i class="fas fa-plus-circle"></i> Custom Subject</h3>
+                                <div class="custom-subject">
+                                    <input type="text" id="customSubject" placeholder="Enter any subject...">
+                                    <button onclick="createCustomSubject()">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="chat-input-container">
-                        <div class="input-wrapper">
-                            <input 
-                                type="text" 
-                                id="userInput" 
-                                placeholder="Ask your question here..."
-                                onkeypress="handleKeyPress(event)"
-                            >
-                            <button id="sendBtn" onclick="sendMessage()">
-                                <i class="fas fa-paper-plane"></i>
+                <!-- Chat View -->
+                <div id="chatView" class="view-section">
+                    <div class="chat-section">
+                        <!-- Chat Header with Subject Badge -->
+                        <div class="chat-header">
+                            <div class="subject-badge">
+                                <i class="fas fa-bookmark"></i>
+                                <span id="currentSubjectName">Subject</span>
+                            </div>
+                            <button class="change-subject-btn" onclick="backToSubjects()">
+                                <i class="fas fa-arrow-left"></i>
+                                Back to Subjects
                             </button>
+                        </div>
+
+                        <!-- Chat Container -->
+                        <div class="chat-container">
+                            <div class="chat-messages" id="chatMessages">
+                                <div class="welcome-message">
+                                    <i class="fas fa-sparkles"></i>
+                                    <h3>Welcome to Your Learning Session</h3>
+                                    <p>Ask questions about the selected topic. I'll provide detailed answers with sources and resources.</p>
+                                </div>
+                            </div>
+
+                            <!-- Input Area -->
+                            <div class="chat-input-container">
+                                <div class="input-wrapper">
+                                    <input type="text" id="messageInput" placeholder="Ask anything...">
+                                    <button id="sendBtn" onclick="sendMessage()">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
-
-        <!-- Loading Overlay -->
-        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
-            <div class="spinner"></div>
-            <p>AI Tutor is thinking...</p>
-        </div>
     </div>
 
     <script src="script.js"></script>
 </body>
 </html>
-

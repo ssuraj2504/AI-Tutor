@@ -14,103 +14,80 @@ async function loadSubjects() {
         displaySubjects(data.subjects);
     } catch (error) {
         console.error('Error loading subjects:', error);
-        document.getElementById('subjectGrid').innerHTML = 
-            '<div class="error">Failed to load subjects. Please check if the server is running.</div>';
+        document.getElementById('subjectGrid').innerHTML = '<p>No subjects found. Make sure the backend is running.</p>';
     }
 }
 
 // Display subjects in grid
 function displaySubjects(subjects) {
-    const grid = document.getElementById('subjectGrid');
-    
-    if (subjects.length === 0) {
-        grid.innerHTML = `
-            <div class="loading" style="grid-column: 1/-1;">
-                <i class="fas fa-info-circle"></i>
-                <p>No subjects found. Add PDFs to subject_pdfs/ folder</p>
-            </div>
-        `;
+    const subjectGrid = document.getElementById('subjectGrid');
+    subjectGrid.innerHTML = '';
+
+    if (!subjects || subjects.length === 0) {
+        subjectGrid.innerHTML = '<p>No subjects available yet.</p>';
         return;
     }
-    
-    grid.innerHTML = subjects.map(subject => `
-        <button class="subject-btn" onclick="selectSubject('${subject}')">
-            <i class="fas fa-book"></i>
+
+    subjects.forEach(subject => {
+        const btn = document.createElement('button');
+        btn.className = 'subject-btn';
+        btn.onclick = () => selectSubject(subject);
+
+        const iconMap = {
+            'Mathematics': 'fas fa-calculator',
+            'Physics': 'fas fa-atom',
+            'Chemistry': 'fas fa-flask',
+            'Biology': 'fas fa-dna',
+            'History': 'fas fa-book-open',
+            'Literature': 'fas fa-feather',
+            'Programming': 'fas fa-code',
+            'Web Development': 'fas fa-globe',
+            'Data Science': 'fas fa-chart-bar',
+            'AI': 'fas fa-robot'
+        };
+
+        const icon = iconMap[subject] || 'fas fa-book';
+
+        btn.innerHTML = `
+            <i class="${icon}"></i>
             <span>${subject}</span>
-        </button>
-    `).join('');
+        `;
+
+        subjectGrid.appendChild(btn);
+    });
 }
 
-// Select subject
+// Select a subject and show chat view
 function selectSubject(subject) {
     currentSubject = subject;
-    document.getElementById('subjectSection').style.display = 'none';
-    document.getElementById('chatSection').style.display = 'flex';
-    document.getElementById('currentSubject').textContent = subject;
-    document.getElementById('welcomeSubject').textContent = subject;
     
-    // Clear previous messages
-    const messages = document.getElementById('chatMessages');
-    messages.innerHTML = `
+    document.getElementById('currentSubjectName').textContent = subject;
+    document.getElementById('subjectView').classList.remove('active-view');
+    document.getElementById('chatView').classList.add('active-view');
+    
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.innerHTML = `
         <div class="welcome-message">
-            <i class="fas fa-robot"></i>
-            <p>Hello! I'm your AI Tutor. Ask me anything about <strong>${subject}</strong>!</p>
+            <i class="fas fa-sparkles"></i>
+            <h3>Welcome to ${subject}</h3>
+            <p>Ask anything about this subject. I'll provide detailed answers with sources.</p>
         </div>
     `;
-    
-    // Focus on input
-    document.getElementById('userInput').focus();
-}
 
-// Select custom subject
-function selectCustomSubject() {
-    const customSubject = document.getElementById('customSubject').value.trim();
-    if (customSubject) {
-        selectSubject(customSubject);
-        document.getElementById('customSubject').value = '';
-    }
-}
-
-// Change subject
-function changeSubject() {
-    currentSubject = null;
-    document.getElementById('chatSection').style.display = 'none';
-    document.getElementById('subjectSection').style.display = 'block';
-    loadSubjects();
-}
-
-// Handle Enter key press
-function handleKeyPress(event) {
-    if (event.key === 'Enter') {
-        sendMessage();
-    }
+    document.getElementById('messageInput').focus();
 }
 
 // Send message
 async function sendMessage() {
-    const input = document.getElementById('userInput');
-    const query = input.value.trim();
-    
-    if (!query) return;
-    
-    if (!currentSubject) {
-        alert('Please select a subject first!');
-        return;
-    }
-    
-    // Disable input
-    input.disabled = true;
-    document.getElementById('sendBtn').disabled = true;
-    
-    // Add user message to chat
-    addMessage(query, 'user');
-    
-    // Clear input
-    input.value = '';
-    
-    // Show loading
-    showLoading();
-    
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value.trim();
+
+    if (!message) return;
+
+    messageInput.value = '';
+    addMessageToChat('user', message);
+    showLoadingIndicator();
+
     try {
         const response = await fetch(`${API_BASE_URL}/chat`, {
             method: 'POST',
@@ -118,126 +95,230 @@ async function sendMessage() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                query: query,
-                subject: currentSubject
+                subject: currentSubject,
+                query: message
             })
         });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            // Add bot response
-            addBotMessage(data.answer, data.sources, data.videos);
+        let data;
+        try {
+            data = await response.json();
+        } catch (err) {
+            removeLoadingIndicator();
+            addMessageToChat('bot', 'Connection error. Make sure backend is running.');
+            scrollChatToBottom();
+            return;
+        }
+
+        removeLoadingIndicator();
+
+        if (!response.ok) {
+            const errMsg = data && data.error ? data.error : 'Sorry, I encountered an error. Please try again.';
+            addMessageToChat('bot', errMsg);
+            scrollChatToBottom();
+            return;
+        }
+
+        if (data.answer) {
+            const responseContent = document.createElement('div');
+            responseContent.innerHTML = formatResponse(data.answer);
+
+            addMessageToChat('bot', responseContent.innerHTML);
+
+            if (data.sources && data.sources.length > 0) {
+                addSourcesToLastMessage(data.sources);
+            }
+
+            if (data.videos && data.videos.length > 0) {
+                addVideosToLastMessage(data.videos);
+            }
+        } else if (data.error) {
+            addMessageToChat('bot', data.error);
         } else {
-            addBotMessage(`Error: ${data.error || 'Something went wrong'}`, [], []);
+            addMessageToChat('bot', 'Sorry, I encountered an unexpected response.');
         }
     } catch (error) {
         console.error('Error:', error);
-        addBotMessage(`Connection error: ${error.message}. Please make sure the server is running.`, [], []);
-    } finally {
-        hideLoading();
-        input.disabled = false;
-        document.getElementById('sendBtn').disabled = false;
-        input.focus();
+        removeLoadingIndicator();
+        addMessageToChat('bot', 'Connection error. Make sure backend is running.');
     }
+
+    scrollChatToBottom();
 }
 
-// Add user message
-function addMessage(text, type) {
-    const messages = document.getElementById('chatMessages');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}`;
+// Add message to chat display
+function addMessageToChat(sender, message) {
+    const chatMessages = document.getElementById('chatMessages');
     
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    messageDiv.innerHTML = `
-        <div class="message-avatar">
-            <i class="fas ${type === 'user' ? 'fa-user' : 'fa-robot'}"></i>
-        </div>
+    if (chatMessages.querySelector('.welcome-message')) {
+        chatMessages.querySelector('.welcome-message').remove();
+    }
+
+    const messageElement = document.createElement('div');
+    messageElement.className = `message ${sender}`;
+
+    const avatar = sender === 'user' ? 'U' : 'A';
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    messageElement.innerHTML = `
+        <div class="message-avatar">${avatar}</div>
         <div class="message-content">
-            <div class="message-bubble">${escapeHtml(text)}</div>
-            <div class="message-time">${time}</div>
+            <div class="message-bubble">${message}</div>
+            <div class="message-time">${timestamp}</div>
         </div>
     `;
-    
-    messages.appendChild(messageDiv);
-    messages.scrollTop = messages.scrollHeight;
+
+    chatMessages.appendChild(messageElement);
 }
 
-// Add bot message with sources and videos
-function addBotMessage(answer, sources, videos) {
-    const messages = document.getElementById('chatMessages');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'message bot';
-    
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    let sourcesHtml = '';
-    if (sources && sources.length > 0) {
-        sourcesHtml = `
-            <div class="sources">
-                <h4><i class="fas fa-book"></i> Sources</h4>
-                <ul>
-                    ${sources.map(source => `<li>${escapeHtml(source)}</li>`).join('')}
-                </ul>
-            </div>
+// Add sources reference to last message
+function addSourcesToLastMessage(sources) {
+    const lastMessage = document.querySelectorAll('.message.bot')[document.querySelectorAll('.message.bot').length - 1];
+    if (lastMessage) {
+        const sourcesDiv = document.createElement('div');
+        sourcesDiv.className = 'sources';
+        sourcesDiv.innerHTML = `
+            <h4><i class="fas fa-bookmark"></i> Sources</h4>
+            <ul>
+                ${sources.map(source => `<li>${source}</li>`).join('')}
+            </ul>
         `;
+        lastMessage.querySelector('.message-content').appendChild(sourcesDiv);
     }
-    
-    let videosHtml = '';
-    if (videos && videos.length > 0) {
-        videosHtml = `
-            <div class="videos">
-                <h4><i class="fab fa-youtube"></i> Recommended Videos</h4>
-                ${videos.map(video => `
-                    <div class="video-item">
-                        <a href="${video.link}" target="_blank" rel="noopener noreferrer">
-                            <i class="fas fa-play-circle"></i>
-                            <span>${escapeHtml(video.title)}</span>
-                        </a>
-                    </div>
-                `).join('')}
-            </div>
+}
+
+// Add videos reference to last message
+function addVideosToLastMessage(videos) {
+    const lastMessage = document.querySelectorAll('.message.bot')[document.querySelectorAll('.message.bot').length - 1];
+    if (lastMessage) {
+        const videosDiv = document.createElement('div');
+        videosDiv.className = 'videos';
+        videosDiv.innerHTML = `
+            <h4><i class="fas fa-video"></i> Related Videos</h4>
+            ${videos.map(video => `
+                <div class="video-item">
+                    <a href="${video.url}" target="_blank">
+                        <i class="fas fa-play-circle"></i>
+                        ${video.title}
+                    </a>
+                </div>
+            `).join('')}
         `;
+        lastMessage.querySelector('.message-content').appendChild(videosDiv);
     }
-    
-    messageDiv.innerHTML = `
-        <div class="message-avatar">
-            <i class="fas fa-robot"></i>
-        </div>
+}
+
+// Format response with markdown support
+function formatResponse(response) {
+    response = response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    response = response.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    response = response.replace(/\n/g, '<br>');
+    return response;
+}
+
+// Show loading indicator
+function showLoadingIndicator() {
+    const chatMessages = document.getElementById('chatMessages');
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'message bot loading-message';
+    loadingDiv.id = 'loadingIndicator';
+    loadingDiv.innerHTML = `
+        <div class="message-avatar">A</div>
         <div class="message-content">
             <div class="message-bubble">
-                ${formatAnswer(answer)}
-                ${sourcesHtml}
-                ${videosHtml}
+                <div class="loading-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
             </div>
-            <div class="message-time">${time}</div>
         </div>
     `;
-    
-    messages.appendChild(messageDiv);
-    messages.scrollTop = messages.scrollHeight;
+    chatMessages.appendChild(loadingDiv);
+    scrollChatToBottom();
 }
 
-// Format answer (preserve line breaks)
-function formatAnswer(text) {
-    return escapeHtml(text).replace(/\n/g, '<br>');
+// Remove loading indicator
+function removeLoadingIndicator() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    if (loadingIndicator) {
+        loadingIndicator.remove();
+    }
 }
 
-// Escape HTML to prevent XSS
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+// Scroll chat to bottom
+function scrollChatToBottom() {
+    const chatMessages = document.getElementById('chatMessages');
+    setTimeout(() => {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 100);
 }
 
-// Show loading overlay
-function showLoading() {
-    document.getElementById('loadingOverlay').style.display = 'flex';
+// Go back to subjects
+function backToSubjects() {
+    currentSubject = null;
+    document.getElementById('chatView').classList.remove('active-view');
+    document.getElementById('subjectView').classList.add('active-view');
+    loadSubjects();
 }
 
-// Hide loading overlay
-function hideLoading() {
-    document.getElementById('loadingOverlay').style.display = 'none';
+// Create custom subject
+function createCustomSubject() {
+    const customSubjectInput = document.getElementById('customSubject');
+    const subject = customSubjectInput.value.trim();
+
+    if (!subject) {
+        alert('Please enter a subject name');
+        return;
+    }
+
+    selectSubject(subject);
+    customSubjectInput.value = '';
 }
 
+// Add loading animation CSS
+const style = document.createElement('style');
+style.textContent = `
+    .loading-dots {
+        display: flex;
+        gap: 4px;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .loading-dots span {
+        width: 8px;
+        height: 8px;
+        background-color: currentColor;
+        border-radius: 50%;
+        animation: pulse 1.4s infinite ease-in-out;
+    }
+
+    .loading-dots span:nth-child(1) {
+        animation-delay: -0.32s;
+    }
+
+    .loading-dots span:nth-child(2) {
+        animation-delay: -0.16s;
+    }
+
+    @keyframes pulse {
+        0%, 60%, 100% {
+            opacity: 0.3;
+        }
+        30% {
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Add Enter key support
+document.addEventListener('keypress', function(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        const messageInput = document.getElementById('messageInput');
+        if (document.activeElement === messageInput) {
+            event.preventDefault();
+            sendMessage();
+        }
+    }
+});
