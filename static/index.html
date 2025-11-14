@@ -18,7 +18,13 @@
                         <i class="fas fa-brain"></i>
                         <h1>AI Tutor</h1>
                     </div>
-                    <p class="tagline">Your intelligent learning assistant powered by RAG & LLM</p>
+                        <p class="tagline">Your intelligent learning assistant powered by RAG & LLM</p>
+                        <div style="float:right; margin-top:-48px; display:flex; gap:8px; align-items:center;">
+                            <div id="userDisplay" style="color:var(--color-text-secondary); font-weight:500; display:none;">
+                                <span id="displayName"></span>
+                            </div>
+                            <button id="loginBtn" class="btn btn--outline" onclick="showAuthModal()">Login / Register</button>
+                        </div>
                 </div>
             </header>
 
@@ -90,5 +96,54 @@
     </div>
 
     <script src="script.js"></script>
+
+    <!-- Auth modal markup -->
+    <div id="authModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
+        <div style="width:420px; max-width:95%; background:var(--color-surface); border-radius:12px; padding:20px; margin:auto; box-shadow:var(--shadow-lg);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 id="authTitle">Login</h3>
+                <button onclick="hideAuthModal()" style="background:transparent; border:none; font-size:18px;">&times;</button>
+            </div>
+
+            <div id="authForms">
+                <div id="loginForm">
+                    <input id="loginUsername" class="form-control" placeholder="Username" style="margin:8px 0;" />
+                    <input id="loginPassword" type="password" class="form-control" placeholder="Password" style="margin:8px 0;" />
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button class="btn btn--primary" onclick="doLogin()">Login</button>
+                        <button class="btn btn--secondary" onclick="showRegister()">Register</button>
+                    </div>
+                </div>
+
+                <div id="registerForm" style="display:none;">
+                    <input id="regUsername" class="form-control" placeholder="Username" style="margin:8px 0;" />
+                    <input id="regPassword" type="password" class="form-control" placeholder="Password" style="margin:8px 0;" />
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button class="btn btn--primary" onclick="doRegister()">Create account</button>
+                        <button class="btn btn--outline" onclick="showLogin()">Back to login</button>
+                    </div>
+                </div>
+            </div>
+            <div id="authMsg" style="margin-top:10px; color:var(--color-error);"></div>
+        </div>
+    </div>
+    
+        <!-- History modal markup -->
+        <div id="historyModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center;">
+            <div style="width:760px; max-width:95%; max-height:80vh; overflow:auto; background:var(--color-surface); border-radius:12px; padding:20px; margin:auto; box-shadow:var(--shadow-lg);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3>Your History</h3>
+                    <button onclick="hideHistoryModal()" style="background:transparent; border:none; font-size:18px;">&times;</button>
+                </div>
+
+                <div id="historyContent" style="margin-top:12px;">
+                    <!-- Filled dynamically by script.js -->
+                    <p style="color:var(--color-text-secondary);">Loading...</p>
+                </div>
+                <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px;">
+                    <button class="btn btn--outline" onclick="hideHistoryModal()">Close</button>
+                </div>
+            </div>
+        </div>
 </body>
 </html>
