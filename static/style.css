@@ -5,7 +5,7 @@
 }
 
 :root {
-    --primary: #6366f1;
+    --primary: #5153ee;
     --primary-dark: #4f46e5;
     --secondary: #8b5cf6;
     --success: #10b981;
@@ -14,8 +14,8 @@
     --bg-primary: #0f172a;
     --bg-secondary: #1e293b;
     --bg-tertiary: #334155;
-    --text-primary: #f1f5f9;
-    --text-secondary: #cbd5e1;
+    --text-primary: #ffffff;
+    --text-secondary: #ffffff;
     --border: #475569;
     --shadow: rgba(0, 0, 0, 0.3);
 }
@@ -388,9 +388,9 @@ body {
 .videos {
     margin-top: 15px;
     padding: 15px;
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(240, 237, 237, 0.1);
     border-radius: 10px;
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    border: 1px solid rgba(246, 239, 239, 0.3);
 }
 
 .videos h4 {
@@ -398,7 +398,7 @@ body {
     align-items: center;
     gap: 8px;
     margin-bottom: 10px;
-    color: #ff6b6b;
+    color: #727634;
 }
 
 .video-item {
@@ -415,7 +415,7 @@ body {
 }
 
 .video-item a {
-    color: #ff6b6b;
+    color: #f9f5f5;
     text-decoration: none;
     display: flex;
     align-items: center;
