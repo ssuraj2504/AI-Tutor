@@ -3,7 +3,7 @@ import os
 import requests
 from config import RAPID_API_KEY, RAPID_API_URL, RAPID_API_HOST
 from langchain_community.document_loaders import PyPDFLoader
-from langchain.text_splitter import CharacterTextSplitter
+from langchain_text_splitters import CharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 
