@@ -1,0 +1,12 @@
+langchain
+langchain-community
+transformers
+torch
+sentence-transformers
+faiss-cpu
+youtube-search-python
+PyPDF2
+flask
+flask-cors
+requests
+langchain-huggingface
